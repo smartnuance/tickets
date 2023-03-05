@@ -1,0 +1,7 @@
+namespace: surrealdb-next
+bases:
+  - ../base
+  - ../../tables
+  - ../../secrets
+resources:
+  - namespace.yaml

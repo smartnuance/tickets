@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: surrealdb
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+  - hosts:
+    - tickets.smartnuance.com
+    - surrealdb.smartnuance.com
+    secretName: tickets-tls
+  rules:
+  - host: tickets.smartnuance.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tickets
+            port:
+              number: 3000
+  - host: surrealdb.smartnuance.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: surrealdb
+            port:
+              number: 8000
+  ingressClassName: nginx

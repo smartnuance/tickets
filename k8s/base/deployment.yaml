@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tickets
+spec:
+  selector:
+    matchLabels:
+      app: tickets
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tickets
+    spec:
+      containers:
+        - name: nextjs
+          image: ghcr.io/smartnuance/tickets:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: surrealdb
+spec:
+  selector:
+    matchLabels:
+      app: surrealdb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: surrealdb
+    spec:
+      containers:
+        - name: surrealdb
+          image: surrealdb/surrealdb:latest
+          imagePullPolicy: Always
+          args:
+            - start
+            - --log=debug
+            # - --user=root
+            # - --pass=root
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: surrealdb-env
+      #     volumeMounts:
+      #       - mountPath: /tmp
+      #         name: data
+      # volumes:
+      #   - name: data
+      #     secret:
+      #       secretName: tickets-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: user-import
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      parallelism: 1
+      template:
+        spec:
+          containers:
+            - name: import-user
+              image: surrealdb/surrealdb:latest
+              imagePullPolicy: Always
+              args:
+                - import
+                - -c=https://surrealdb.smartnuance.com
+                - -u=$(USER)
+                - -p=$(PASS)
+                - --ns=default
+                - --db=default
+                - /tmp/user.surql
+              envFrom:
+                - secretRef:
+                    name: surrealdb-env
+              volumeMounts:
+                - mountPath: /tmp
+                  name: data
+          volumes:
+            - name: data
+              secret:
+                secretName: tickets-data
+          restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tickets-import
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      parallelism: 1
+      template:
+        spec:
+          containers:
+            - name: import-user
+              image: surrealdb/surrealdb:latest
+              imagePullPolicy: Always
+              args:
+                - import
+                - -c=https://surrealdb.smartnuance.com
+                - -u=$(USER)
+                - -p=$(PASS)
+                - --ns=default
+                - --db=default
+                - /tmp/ticket.surql
+              envFrom:
+                - secretRef:
+                    name: surrealdb-env
+              volumeMounts:
+                - mountPath: /tmp
+                  name: data
+          volumes:
+            - name: data
+              secret:
+                secretName: tickets-data
+          restartPolicy: Never
+  

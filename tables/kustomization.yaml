@@ -1,0 +1,5 @@
+secretGenerator:
+  - name: tickets-data
+    files:
+      - user.surql
+      - ticket.surql
