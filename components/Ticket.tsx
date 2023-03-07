@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRemoveTicket } from '../constants/Queries';
+import { useAddReviewer, useRemoveTicket } from '../constants/Queries';
 import { Ticket, TicketID, User } from '../constants/Types';
 import LinkButton from './form/LinkButton';
 import Button from './form/Button';
@@ -26,10 +26,12 @@ export default function RenderTicket({
     ticket,
     onRemoved,
     showAuthorTools,
+    showAssignToMe,
 }: {
     ticket: Ticket<User>;
     onRemoved?: (id: TicketID) => unknown;
     showAuthorTools?: boolean;
+    showAssignToMe?: boolean;
 }) {
     const { isLoading: isRemovingTicket, mutate: removeTicket } =
         useRemoveTicket({
@@ -37,6 +39,9 @@ export default function RenderTicket({
             onRemoved,
         });
     const epic = ticket.members && ticket.members.length > 0;
+
+    const { isLoading: isAddingReviewer, mutate: addReviewer } =
+        useAddReviewer();
 
     return (
         <div
@@ -99,19 +104,42 @@ export default function RenderTicket({
                     </div>
                 )}
             </div>
-            {showAuthorTools && (
+            {(showAuthorTools || showAssignToMe) && (
                 <div className="bg-gray-100 border-t rounded-b-xl py-3 px-4 md:py-4 md:px-5 text-sm text-gray-500 dark:text-gray-500 dark:bg-gray-800 dark:border-gray-700">
                     <div className="flex gap-4">
-                        <LinkButton href={`/edit#${ticket.id}`} size="small">
-                            edit
-                        </LinkButton>
-                        <Button
-                            onClick={() => removeTicket()}
-                            size="small"
-                            color="black"
-                        >
-                            {isRemovingTicket ? 'Working' : 'delete'}
-                        </Button>
+                        {showAuthorTools && (
+                            <>
+                                <LinkButton
+                                    href={`/edit#${ticket.id}`}
+                                    size="small"
+                                >
+                                    edit
+                                </LinkButton>
+                                <Button
+                                    onClick={() => removeTicket()}
+                                    size="small"
+                                    color="black"
+                                >
+                                    {isRemovingTicket
+                                        ? 'removing...'
+                                        : 'delete'}
+                                </Button>
+                            </>
+                        )}
+                        {showAssignToMe && (
+                            <>
+                                <div className="flex-grow"></div>
+                                <Button
+                                    onClick={() => addReviewer(ticket.id)}
+                                    size="small"
+                                    color="black"
+                                >
+                                    {isAddingReviewer
+                                        ? 'adding...'
+                                        : 'assign to me'}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

@@ -37,7 +37,7 @@ export default function AssignedTickets() {
 
                 <Hint
                     kind="query"
-                    id="SELECT *, <-reviews<-user as reviewers, ->includes->ticket as members FROM ticket WHERE <-reviews<-user CONTAINS user:cld0r7j69000108mg39w4fs4d ORDER BY created DESC FETCH author, reviewers, members.title"
+                    id={`SELECT *, <-reviews<-user as reviewers, ->includes->ticket as members FROM ticket WHERE <-reviews<-user CONTAINS ${user_id} ORDER BY created DESC FETCH author, reviewers, members.title`}
                 ></Hint>
 
                 <TicketList userID={user_id}></TicketList>
@@ -61,6 +61,7 @@ function TicketList({ userID }: { userID: UserID }) {
                             key={ticket.id}
                             onRemoved={() => refetch()}
                             showAuthorTools={ticket.author?.id === userID}
+                            showAssignToMe={true}
                         />
                     ))}
                 </div>

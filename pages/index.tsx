@@ -48,6 +48,7 @@ export default function Home() {
                                 key={ticket.id}
                                 onRemoved={() => refetch()}
                                 showAuthorTools={ticket.author?.id === user?.id}
+                                showAssignToMe={!!user}
                             />
                         ))}
                     </div>

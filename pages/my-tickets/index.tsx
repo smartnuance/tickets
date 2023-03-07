@@ -44,6 +44,7 @@ function TicketList({ userID }: { userID: UserID }) {
                             key={ticket.id}
                             onRemoved={() => refetch()}
                             showAuthorTools={ticket.author?.id === userID}
+                            showAssignToMe={true}
                         />
                     ))}
                 </div>

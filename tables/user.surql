@@ -1,3 +1,6 @@
+REMOVE DATABASE default;
+USE DATABASE default;
+
 DEFINE TABLE user SCHEMAFULL
     PERMISSIONS 
         FOR select FULL

@@ -47,20 +47,13 @@ spec:
           envFrom:
             - secretRef:
                 name: surrealdb-env
-      #     volumeMounts:
-      #       - mountPath: /tmp
-      #         name: data
-      # volumes:
-      #   - name: data
-      #     secret:
-      #       secretName: tickets-data
 ---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: user-import
 spec:
-  schedule: "0 0 * * *"
+  schedule: "0 3 * * *"
   concurrencyPolicy: Replace
   jobTemplate:
     spec:
@@ -96,7 +89,7 @@ kind: CronJob
 metadata:
   name: tickets-import
 spec:
-  schedule: "0 0 * * *"
+  schedule: "1 3 * * *"
   concurrencyPolicy: Replace
   jobTemplate:
     spec:

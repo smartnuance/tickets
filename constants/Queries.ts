@@ -166,7 +166,7 @@ export function useTickets<TAuthorType extends UserID | User>({
             const body = await SurrealInstance.opiniatedQuery<
                 Ticket<TAuthorType>
             >(
-                `SELECT *, <-reviews<-user as reviewers, ->includes->ticket as members FROM ticket ORDER BY created DESC ${
+                `SELECT *, array::distinct(<-reviews<-user) as reviewers, ->includes->ticket as members FROM ticket ORDER BY created DESC ${
                     fetchAuthor ? 'FETCH author, reviewers, members.title' : ''
                 }`
             );
@@ -185,7 +185,7 @@ export function useMyTickets<TAuthorType extends UserID | User>(id: UserID) {
             const body = await SurrealInstance.opiniatedQuery<
                 Ticket<TAuthorType>
             >(
-                `SELECT *, <-reviews<-user as reviewers, ->includes->ticket as members FROM ticket WHERE author = $id ORDER BY created DESC FETCH author, reviewers, members.title`,
+                `SELECT *, array::distinct(<-reviews<-user) as reviewers, ->includes->ticket as members FROM ticket WHERE author = $id ORDER BY created DESC FETCH author, reviewers, members.title`,
                 {
                     id,
                 }
@@ -205,7 +205,7 @@ export function useAssignedTickets<TAuthorType extends UserID | User>(
         queryKey: ['assigned-to-me-tickets'],
         queryFn: async (): Promise<Ticket<TAuthorType>[]> => {
             const body = await SurrealInstance.opiniatedQuery<User>(
-                `SELECT *, <-reviews<-user as reviewers, ->includes->ticket as members FROM ticket WHERE <-reviews<-user CONTAINS user:cld0r7j69000108mg39w4fs4d ORDER BY created DESC FETCH author, reviewers, members.title`,
+                `SELECT *, array::distinct(<-reviews<-user) as reviewers, ->includes->ticket as members FROM ticket WHERE <-reviews<-user CONTAINS $id ORDER BY created DESC FETCH author, reviewers, members.title`,
                 {
                     id,
                 }
@@ -318,6 +318,30 @@ export function useRemoveTicket({
                 onRemoved?.(id);
             } else {
                 throw new Error('Failed to remove ticket');
+            }
+        },
+    });
+}
+
+export function useAddReviewer() {
+    const { data: auth_user } = useAuthenticatedUser();
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (ticket_id: TicketID) => {
+            if (auth_user) {
+                const body = await SurrealInstance.query(
+                    `RELATE ${auth_user.id}->reviews->${ticket_id}`
+                    // {
+                    //     id: auth_user.id,
+                    //     ticket_id,
+                    // }
+                );
+
+                if (body[0] && !body[0]?.error) {
+                    queryClient.invalidateQueries();
+                } else {
+                    throw new Error('Failed to add reviewer');
+                }
             }
         },
     });
